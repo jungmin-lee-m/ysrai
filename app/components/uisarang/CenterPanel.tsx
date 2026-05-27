@@ -1,7 +1,7 @@
-import { Sparkles } from "lucide-react";
-import { currentPatient, type RecState } from "./data";
-import { RecordPanel } from "./RecordPanel";
-import { CodeTables } from "./CodeTables";
+import { AudioLines, Pause } from "lucide-react";
+import { currentPatient } from "./data";
+import { SoapView } from "./SoapView";
+import { MedicalHistorySummary } from "./MedicalHistorySummary";
 
 function Divider() {
   return <span className="h-2.5 w-px shrink-0 bg-[var(--line-default)]" />;
@@ -35,62 +35,35 @@ function PatientHeader() {
   );
 }
 
-function PastRecordSummary() {
+function RecordingStatus() {
   return (
-    <section className="rounded-[var(--radius-lg)] bg-[var(--bg-service-subtle)] p-4">
-      <div className="mb-2.5 flex items-center gap-2">
-        <Sparkles className="h-4 w-4 text-[var(--text-service-primary)]" />
-        <span className="text-[14px] font-semibold text-[var(--text-service-bold)]">
-          과거 기록 요약
-        </span>
-        <button className="ml-auto text-[12px] font-medium text-[var(--text-service-primary)]">
-          자세히
-        </button>
-      </div>
-      <ul className="space-y-2 text-[13px] leading-relaxed text-[var(--text-main)]">
-        <li className="flex gap-2">
-          <span className="text-[var(--text-service-primary)]">•</span>
-          BMI 26.8 — 비만 전단계, 체중 관리 필요
-        </li>
-        <li className="flex gap-2">
-          <span className="text-[var(--text-service-primary)]">•</span>
-          고혈압 12년 · 당뇨 4년 — 만성질환 관리 강화 권고
-        </li>
-        <li className="flex gap-2">
-          <span className="text-[var(--text-service-primary)]">•</span>
-          현재 복용: 암로디핀 5mg 단독 → 최근 혈압 조절 불량
-        </li>
-        <li className="flex gap-2 font-medium text-[var(--status-warning-text-main)]">
-          <span>•</span>
-          페니실린 알레르기 — 처방 시 주의
-        </li>
-      </ul>
-    </section>
+    <div className="flex shrink-0 items-center justify-between border-t border-[var(--gray-800)] bg-[var(--gray-900)] px-6 py-3 text-white">
+      <span className="flex items-center gap-2 text-[13px] font-medium">
+        <AudioLines className="h-4 w-4" />
+        녹음 중
+        <span className="tabular-nums text-[var(--gray-200)]">3:57</span>
+      </span>
+      <button className="flex items-center gap-1.5 text-[13px] text-[var(--gray-200)] hover:text-white">
+        <Pause className="h-4 w-4" />
+        일시정지
+      </button>
+    </div>
   );
 }
 
-export function CenterPanel({
-  rec,
-  secs,
-  onStart,
-  onStop,
-}: {
-  rec: RecState;
-  secs: number;
-  onStart: () => void;
-  onStop: () => void;
-}) {
+export function CenterPanel() {
   return (
     <main className="flex min-w-0 flex-1 flex-col bg-[var(--bg-subtle)]">
       <div className="bg-[var(--bg-base)]">
         <PatientHeader />
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto flex w-full max-w-[760px] flex-col gap-3 px-4 py-3">
-          <PastRecordSummary />
-          <RecordPanel rec={rec} secs={secs} onStart={onStart} onStop={onStop} />
-          <CodeTables />
+      <div className="flex min-h-0 flex-1 gap-3 p-3">
+        <div className="flex w-[480px] shrink-0 min-w-0 flex-col">
+          <MedicalHistorySummary />
+        </div>
+        <div className="min-w-0 flex-1 overflow-y-auto">
+          <SoapView />
         </div>
       </div>
     </main>
