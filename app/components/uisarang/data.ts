@@ -1,6 +1,12 @@
 export type OutStatus = "진료중" | "응급" | "검사" | "보류" | "시술";
 export type PaymentStatus = "수납대기" | "수납완료";
 
+// 녹음 전 / 녹음 중 / 녹음 후
+export type RecState = "idle" | "recording" | "done";
+
+export const fmtTime = (s: number) =>
+  `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+
 export type QueuePatient = {
   chartNo: string;
   name: string;
@@ -49,6 +55,27 @@ export const currentPatient = {
   phone: "010-2845-1932",
   memo: "두통, 어지럼증이 일주일째 지속, 혈압약 규칙적으로 복용하고 있음",
 };
+
+export type ConversationItem = {
+  title: string;
+  patient?: string;
+  ai?: boolean;
+};
+
+export const conversations: ConversationItem[] = [
+  { title: "글루타치온 주사 후 알레르기 반응을 보이는 환자", patient: "김메디 · 여/32", ai: true },
+  { title: "메트프로핀 부작용 상담이 길어지면 이렇게", patient: "최민지 · 여/36" },
+  { title: "장기간 아스피린 복용 후 위궤양이 발생한 환자", patient: "김메디 · 여/58" },
+  { title: "항생제 복용 후 설사 증세를 보이는 환자" },
+  { title: "고혈압약 복용 후 저혈압이 나타난 환자" },
+  { title: "철분제 복용 후 변비가 심해진 환자" },
+  { title: "칼슘 보충제 복용 후 속쓰림을 호소하는 환자" },
+  { title: "오메가3 과다 섭취로 인한 출혈 경향 증가 환자" },
+  { title: "프로바이오틱스 복용 후 복부 팽만감을 호소하는 환자" },
+  { title: "마그네슘 과다 복용으로 인한 설사 환자" },
+  { title: "코엔자임Q10 복용 후 불면증을 겪는 환자" },
+  { title: "엽산 과다 섭취로 인한 소화 불량 환자" },
+];
 
 export type TranscriptLine = {
   time: string;
