@@ -3,7 +3,6 @@ import { PanelLeft } from "lucide-react";
 import { TitleBar } from "./TitleBar";
 import { LeftSidebar } from "./LeftSidebar";
 import { CenterPanel } from "./CenterPanel";
-import { ChatPanelDocked, ChatFloating } from "./ChatPanel";
 import type { RecState } from "./data";
 
 export function UisarangScreen() {
@@ -39,9 +38,7 @@ export function UisarangScreen() {
           </button>
         )}
         <CenterPanel rec={rec} secs={secs} onStart={startRec} onStop={stopRec} />
-        <ChatPanelDocked />
       </div>
-      <ChatFloating />
     </div>
   );
 }

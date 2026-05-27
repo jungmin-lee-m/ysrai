@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Mic, PanelLeft, Check, Sparkles } from "lucide-react";
+import { Plus, Mic, PanelLeft, Check, Sparkles, ChevronDown } from "lucide-react";
 import { cn } from "../ui/utils";
 import {
   outpatients,
@@ -12,7 +12,6 @@ import {
 } from "./data";
 
 type MainTab = "conversations" | "patients";
-type SubTab = "외래" | "예약" | "완료";
 
 const statusStyle: Record<string, string> = {
   진료중: "bg-[var(--brand-primary)] text-white",
@@ -101,6 +100,38 @@ function PatientRow({
   );
 }
 
+function Section({
+  label,
+  count,
+  defaultOpen,
+  children,
+}: {
+  label: string;
+  count: number;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen ?? false);
+  return (
+    <div>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center gap-1.5 rounded-[var(--radius-md)] px-2 py-1.5 hover:bg-[var(--bg-subtle)]"
+      >
+        <ChevronDown
+          className={cn(
+            "h-4 w-4 text-[var(--icon-sub)] transition-transform",
+            !open && "-rotate-90",
+          )}
+        />
+        <span className="text-[13px] font-semibold text-[var(--text-main)]">{label}</span>
+        <span className="ml-auto text-[11px] tabular-nums text-[var(--text-tertiary)]">{count}</span>
+      </button>
+      {open && <div className="mb-1 mt-0.5 space-y-0.5">{children}</div>}
+    </div>
+  );
+}
+
 export function LeftSidebar({
   onClose,
   rec,
@@ -111,7 +142,6 @@ export function LeftSidebar({
   secs: number;
 }) {
   const [mainTab, setMainTab] = useState<MainTab>("patients");
-  const [subTab, setSubTab] = useState<SubTab>("외래");
   const [width, setWidth] = useState(240);
   const [inService, setInService] = useState<Set<string>>(new Set());
 
@@ -129,12 +159,6 @@ export function LeftSidebar({
   };
 
   const call = (chartNo: string) => setInService((s) => new Set(s).add(chartNo));
-
-  const subTabs: { key: SubTab; count: number }[] = [
-    { key: "외래", count: outpatients.length },
-    { key: "예약", count: reservations.length },
-    { key: "완료", count: completed.length },
-  ];
 
   return (
     <aside
@@ -242,46 +266,29 @@ export function LeftSidebar({
             ))}
           </div>
         ) : (
-          <>
-            {/* 하위 탭: 외래 / 예약 / 완료 */}
-            <div className="flex gap-4 border-b border-[var(--line-subtle)] px-4">
-              {subTabs.map(({ key, count }) => (
-                <button
-                  key={key}
-                  onClick={() => setSubTab(key)}
-                  className={cn(
-                    "relative flex items-center gap-1 py-2 text-[13px] font-medium transition-colors",
-                    subTab === key
-                      ? "text-[var(--text-service-primary)]"
-                      : "text-[var(--text-tertiary)]",
-                  )}
-                >
-                  {key}
-                  <span className="text-[11px] tabular-nums">{count}</span>
-                  {subTab === key && (
-                    <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-[var(--bg-service)]" />
-                  )}
-                </button>
+          <div className="min-h-0 flex-1 space-y-1 overflow-y-auto px-2 py-2">
+            <Section label="외래" count={outpatients.length} defaultOpen>
+              {outpatients.map((p) => (
+                <PatientRow
+                  key={p.chartNo}
+                  p={p}
+                  status={inService.has(p.chartNo) ? "진료중" : p.status}
+                  callable
+                  onCall={call}
+                />
               ))}
-            </div>
-
-            <div className="min-h-0 flex-1 space-y-0.5 overflow-y-auto px-2 py-2">
-              {subTab === "외래" &&
-                outpatients.map((p) => (
-                  <PatientRow
-                    key={p.chartNo}
-                    p={p}
-                    status={inService.has(p.chartNo) ? "진료중" : p.status}
-                    callable
-                    onCall={call}
-                  />
-                ))}
-              {subTab === "예약" &&
-                reservations.map((p) => <PatientRow key={p.chartNo} p={p} />)}
-              {subTab === "완료" &&
-                completed.map((p) => <PatientRow key={p.chartNo} p={p} status={p.payment} />)}
-            </div>
-          </>
+            </Section>
+            <Section label="예약" count={reservations.length}>
+              {reservations.map((p) => (
+                <PatientRow key={p.chartNo} p={p} />
+              ))}
+            </Section>
+            <Section label="완료" count={completed.length}>
+              {completed.map((p) => (
+                <PatientRow key={p.chartNo} p={p} status={p.payment} />
+              ))}
+            </Section>
+          </div>
         )}
       </div>
 
