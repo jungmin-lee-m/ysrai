@@ -1,6 +1,5 @@
-import { AudioLines, Pause } from "lucide-react";
-import { currentPatient } from "./data";
-import { SoapView } from "./SoapView";
+import { currentPatient, type RecState } from "./data";
+import { RecordPanel } from "./RecordPanel";
 import { MedicalHistorySummary } from "./MedicalHistorySummary";
 
 function Divider() {
@@ -35,23 +34,17 @@ function PatientHeader() {
   );
 }
 
-function RecordingStatus() {
-  return (
-    <div className="flex shrink-0 items-center justify-between border-t border-[var(--gray-800)] bg-[var(--gray-900)] px-6 py-3 text-white">
-      <span className="flex items-center gap-2 text-[13px] font-medium">
-        <AudioLines className="h-4 w-4" />
-        녹음 중
-        <span className="tabular-nums text-[var(--gray-200)]">3:57</span>
-      </span>
-      <button className="flex items-center gap-1.5 text-[13px] text-[var(--gray-200)] hover:text-white">
-        <Pause className="h-4 w-4" />
-        일시정지
-      </button>
-    </div>
-  );
-}
-
-export function CenterPanel() {
+export function CenterPanel({
+  rec,
+  secs,
+  onStart,
+  onStop,
+}: {
+  rec: RecState;
+  secs: number;
+  onStart: () => void;
+  onStop: () => void;
+}) {
   return (
     <main className="flex min-w-0 flex-1 flex-col bg-[var(--bg-subtle)]">
       <div className="bg-[var(--bg-base)]">
@@ -63,7 +56,7 @@ export function CenterPanel() {
           <MedicalHistorySummary />
         </div>
         <div className="min-w-0 flex-1 overflow-y-auto">
-          <SoapView />
+          <RecordPanel rec={rec} secs={secs} onStart={onStart} onStop={onStop} />
         </div>
       </div>
     </main>
