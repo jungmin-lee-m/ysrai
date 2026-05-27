@@ -66,8 +66,6 @@ export function CenterPanel() {
           <SoapView />
         </div>
       </div>
-
-      <RecordingStatus />
     </main>
   );
 }

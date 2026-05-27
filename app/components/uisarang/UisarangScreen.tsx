@@ -1,19 +1,34 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PanelLeft } from "lucide-react";
 import { TitleBar } from "./TitleBar";
 import { LeftSidebar } from "./LeftSidebar";
 import { CenterPanel } from "./CenterPanel";
-import { ChatPanelDocked, FloatingPanels } from "./ChatPanel";
+import { ChatPanelDocked, ChatFloating } from "./ChatPanel";
+import type { RecState } from "./data";
 
 export function UisarangScreen() {
   const [leftOpen, setLeftOpen] = useState(true);
+  const [rec, setRec] = useState<RecState>("idle");
+  const [secs, setSecs] = useState(0);
+
+  useEffect(() => {
+    if (rec !== "recording") return;
+    const id = setInterval(() => setSecs((s) => s + 1), 1000);
+    return () => clearInterval(id);
+  }, [rec]);
+
+  const startRec = () => {
+    setSecs(0);
+    setRec("recording");
+  };
+  const stopRec = () => setRec("done");
 
   return (
     <div className="flex h-screen flex-col bg-[var(--bg-subtle)] text-[var(--text-main)]">
       <TitleBar />
       <div className="flex min-h-0 flex-1">
         {leftOpen ? (
-          <LeftSidebar onClose={() => setLeftOpen(false)} />
+          <LeftSidebar onClose={() => setLeftOpen(false)} rec={rec} secs={secs} />
         ) : (
           <button
             onClick={() => setLeftOpen(true)}
@@ -23,10 +38,10 @@ export function UisarangScreen() {
             <PanelLeft className="h-[18px] w-[18px]" />
           </button>
         )}
-        <CenterPanel />
+        <CenterPanel rec={rec} secs={secs} onStart={startRec} onStop={stopRec} />
         <ChatPanelDocked />
       </div>
-      <FloatingPanels />
+      <ChatFloating />
     </div>
   );
 }
