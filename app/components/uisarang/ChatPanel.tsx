@@ -72,9 +72,15 @@ function ChatContent() {
     );
   }
 
-  // 대화 중: 메시지 위 + 입력창 하단
+  // 대화 중: 대화 제목 + 메시지 위 + 입력창 하단
+  const title = messages[0]?.text ?? "새 대화";
   return (
     <div className="flex h-full flex-col">
+      <div className="shrink-0 border-b border-[var(--line-subtle)] px-4 py-2.5">
+        <span className="block truncate text-[14px] font-medium text-[var(--text-main)]">
+          {title}
+        </span>
+      </div>
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4">
         {messages.map((m, i) =>
           m.role === "user" ? (
