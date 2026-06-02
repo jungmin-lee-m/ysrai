@@ -2,3 +2,18 @@
 @import './tailwind.css';
 @import './theme.css';
 @import './tokens.css';
+
+/* 녹음 파형 애니메이션 */
+@keyframes ysrai-wave {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+.ysrai-wave-bar {
+  transform-origin: center;
+  animation: ysrai-wave 0.9s ease-in-out infinite;
+}

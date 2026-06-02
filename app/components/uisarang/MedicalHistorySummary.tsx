@@ -200,20 +200,18 @@ function colorClass(c: "" | "high" | "low") {
 
 function WidgetCard({
   children,
-  span = 1,
+  fullWidth = false,
   ai = false,
-  maxBodyHeight,
 }: {
   children: React.ReactNode;
-  span?: 1 | 2;
+  fullWidth?: boolean;
   ai?: boolean;
-  maxBodyHeight?: number;
 }) {
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-[var(--radius-md)] border border-[var(--line-default)] bg-[var(--bg-base)] min-w-0",
-        span === 2 && "col-span-2",
+        "relative mb-[6px] break-inside-avoid overflow-hidden rounded-[var(--radius-md)] border border-[var(--line-default)] bg-[var(--bg-base)]",
+        fullWidth && "[column-span:all]",
         ai && "border-l-2 border-l-[var(--violet-300)] bg-gradient-to-b from-[var(--bg-service-subtle)] to-[var(--bg-base)]",
       )}
     >
@@ -224,12 +222,7 @@ function WidgetCard({
       >
         <Settings2 className="h-[11px] w-[11px]" />
       </button>
-      <div
-        className="overflow-y-auto px-[10px] py-[7px] pr-[24px] pb-[8px]"
-        style={maxBodyHeight ? { maxHeight: maxBodyHeight } : undefined}
-      >
-        {children}
-      </div>
+      <div className="px-[10px] py-[7px] pr-[24px] pb-[8px]">{children}</div>
     </div>
   );
 }
@@ -240,7 +233,7 @@ function NoteWidget() {
     .filter((it): it is NoteItem => Boolean(it && it.content));
   if (!items.length) return null;
   return (
-    <WidgetCard span={2} maxBodyHeight={100}>
+    <WidgetCard fullWidth>
       <div className="flex flex-wrap gap-x-3 gap-y-[3px]">
         {items.map((it) => (
           <span
@@ -265,7 +258,7 @@ function DxMedsObsWidget() {
     .filter((dx) => dx.meds.length > 0 || (dmo.aiObsOn && dx.observations.length > 0));
   if (!diagnoses.length) return null;
   return (
-    <WidgetCard span={2} maxBodyHeight={260}>
+    <WidgetCard>
       {diagnoses.map((dx, idx) => (
         <div
           key={dx.id}
@@ -360,7 +353,7 @@ function VitalWidget() {
     .filter((it): it is SeriesItem => Boolean(it));
   if (!items.length) return null;
   return (
-    <WidgetCard span={1} maxBodyHeight={140}>
+    <WidgetCard>
       <div className="flex flex-col gap-[1px]">
         {items.map((it) => (
           <SeriesRow key={it.id} item={it} />
@@ -384,7 +377,7 @@ function LabWidget() {
   );
   if (!entries.length) return null;
   return (
-    <WidgetCard span={1} maxBodyHeight={180}>
+    <WidgetCard>
       <div className="flex flex-col gap-[1px]">
         {entries.map((e) => {
           if (e.kind === "item") {
@@ -430,7 +423,7 @@ function ProcWidget() {
   );
   if (!rows.length) return null;
   return (
-    <WidgetCard span={1} maxBodyHeight={140}>
+    <WidgetCard>
       <div className="flex flex-col gap-[2px]">
         {rows.map((g) => (
           <div key={g.id}>
@@ -472,7 +465,7 @@ function VacWidget() {
     );
   if (!visible.length) return null;
   return (
-    <WidgetCard span={1} maxBodyHeight={140}>
+    <WidgetCard>
       <div className="grid grid-cols-2 gap-[4px]">
         {visible.map((it) => {
           const tid = it.id;
@@ -524,7 +517,7 @@ function VacWidget() {
 
 export function MedicalHistorySummary() {
   return (
-    <section className="flex h-full min-h-0 flex-col overflow-hidden rounded-[var(--radius-lg)] border border-[var(--line-default)] bg-[var(--bg-base)]">
+    <section className="flex max-h-[46vh] flex-col overflow-hidden rounded-[var(--radius-lg)] border border-[var(--line-default)] bg-[var(--bg-base)]">
       <div className="flex items-center gap-2 border-b border-[var(--line-subtle)] px-3 py-[8px]">
         <span className="text-[14px] font-semibold text-[var(--text-main)]">
           환자 진료이력 요약
@@ -537,10 +530,12 @@ export function MedicalHistorySummary() {
           <LayoutGrid className="h-[13px] w-[13px]" />
         </button>
       </div>
-      <div className="grid min-h-0 flex-1 grid-cols-2 gap-[6px] overflow-hidden p-[6px]" style={{ gridAutoFlow: "dense", alignContent: "start" }}>
+      <div
+        className="min-h-0 flex-1 overflow-y-auto p-[6px]"
+        style={{ columnCount: 2, columnGap: "6px", columnFill: "balance" }}
+      >
         <NoteWidget />
         <DxMedsObsWidget />
-        <VitalWidget />
         <LabWidget />
         <ProcWidget />
         <VacWidget />
