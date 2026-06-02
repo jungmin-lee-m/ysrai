@@ -56,26 +56,64 @@ export const currentPatient = {
   memo: "두통, 어지럼증이 일주일째 지속, 혈압약 규칙적으로 복용하고 있음",
 };
 
+// 일반 대화 + 의사랑 데이터 기반(통계) 대화 — 환자 컨텍스트 없음
 export type ConversationItem = {
   title: string;
-  patient?: string;
-  ai?: boolean;
+  kind: "general" | "db"; // db = 의사랑 데이터베이스 기반(통계/분석)
+  daysAgo: number; // 오늘=0, 어제=1 ...
 };
 
 export const conversations: ConversationItem[] = [
-  { title: "글루타치온 주사 후 알레르기 반응을 보이는 환자", patient: "김메디 · 여/32", ai: true },
-  { title: "메트프로핀 부작용 상담이 길어지면 이렇게", patient: "최민지 · 여/36" },
-  { title: "장기간 아스피린 복용 후 위궤양이 발생한 환자", patient: "김메디 · 여/58" },
-  { title: "항생제 복용 후 설사 증세를 보이는 환자" },
-  { title: "고혈압약 복용 후 저혈압이 나타난 환자" },
-  { title: "철분제 복용 후 변비가 심해진 환자" },
-  { title: "칼슘 보충제 복용 후 속쓰림을 호소하는 환자" },
-  { title: "오메가3 과다 섭취로 인한 출혈 경향 증가 환자" },
-  { title: "프로바이오틱스 복용 후 복부 팽만감을 호소하는 환자" },
-  { title: "마그네슘 과다 복용으로 인한 설사 환자" },
-  { title: "코엔자임Q10 복용 후 불면증을 겪는 환자" },
-  { title: "엽산 과다 섭취로 인한 소화 불량 환자" },
+  { title: "고혈압 1차 치료제 선택 가이드", kind: "general", daysAgo: 0 },
+  { title: "최근 3개월 내원 환자 연령 분포 분석", kind: "db", daysAgo: 0 },
+  { title: "메트포르민 부작용 상담 체크리스트", kind: "general", daysAgo: 1 },
+  { title: "올 상반기 당뇨 환자 평균 HbA1c 추이", kind: "db", daysAgo: 1 },
+  { title: "독감 예방접종 권고 대상 안내문 작성", kind: "general", daysAgo: 3 },
+  { title: "재진 환자 평균 방문 주기 통계", kind: "db", daysAgo: 5 },
+  { title: "고혈압 환자 식이요법 교육자료 생성", kind: "general", daysAgo: 7 },
+  { title: "이번 달 신환/재진 비율 조회", kind: "db", daysAgo: 14 },
+  { title: "항생제 복용 후 설사 대처 안내문", kind: "general", daysAgo: 22 },
+  { title: "지난 분기 상병코드 빈도 TOP 10", kind: "db", daysAgo: 41 },
+  { title: "코엔자임Q10 복용 상담 메모", kind: "general", daysAgo: 68 },
 ];
+
+// 환자 기반 대화 = AI 진료 내역 (제목 대신 환자 정보 사용)
+export type ConsultRecord = {
+  id: string;
+  name: string;
+  chartNo: string;
+  age: number;
+  sex: "남" | "여";
+  date: string; // 표시용 날짜
+  daysAgo: number; // 정렬용
+};
+
+export const consultRecords: ConsultRecord[] = [
+  { id: "c1", name: "김메디", chartNo: "19283726", age: 41, sex: "여", date: "06.02", daysAgo: 0 },
+  { id: "c2", name: "조성진", chartNo: "100231", age: 52, sex: "남", date: "06.02", daysAgo: 0 },
+  { id: "c3", name: "박지민", chartNo: "100234", age: 28, sex: "여", date: "06.01", daysAgo: 1 },
+  { id: "c4", name: "최민수", chartNo: "100235", age: 45, sex: "남", date: "05.30", daysAgo: 3 },
+  { id: "c5", name: "한정우", chartNo: "100236", age: 38, sex: "남", date: "05.28", daysAgo: 5 },
+  { id: "c6", name: "이수진", chartNo: "100233", age: 30, sex: "여", date: "05.26", daysAgo: 7 },
+  { id: "c7", name: "정해인", chartNo: "100251", age: 41, sex: "남", date: "05.20", daysAgo: 13 },
+  { id: "c8", name: "한소희", chartNo: "100252", age: 29, sex: "여", date: "05.10", daysAgo: 23 },
+];
+
+export type DateGroup<T> = { label: string; items: T[] };
+
+export function groupByDate<T extends { daysAgo: number }>(items: T[]): DateGroup<T>[] {
+  const buckets: { label: string; test: (d: number) => boolean }[] = [
+    { label: "오늘", test: (d) => d === 0 },
+    { label: "어제", test: (d) => d === 1 },
+    { label: "지난 7일", test: (d) => d >= 2 && d <= 7 },
+    { label: "지난 30일", test: (d) => d >= 8 && d <= 30 },
+    { label: "이전", test: (d) => d > 30 },
+  ];
+  const sorted = [...items].sort((a, b) => a.daysAgo - b.daysAgo);
+  return buckets
+    .map((b) => ({ label: b.label, items: sorted.filter((it) => b.test(it.daysAgo)) }))
+    .filter((g) => g.items.length > 0);
+}
 
 export type TranscriptLine = {
   time: string;
@@ -104,17 +142,25 @@ export const favorites: string[] = [
   "고혈압 환자에게 적합한 차 종류는 무엇인가요?",
 ];
 
+// 추천 질문 (대화창 빠른 실행 버튼)
+export const quickActions: string[] = [
+  "교육 자료 생성",
+  "식이요법 추천",
+  "복약 안내문",
+  "운동 요법 추천",
+];
+
 export type Diagnosis = {
   id: string;
   userCode: string; // 사용자코드
   name: string; // 명칭
-  ai?: boolean;
+  chartDate: string; // 과거 차트 내원일 (출처)
 };
 
 export const diagnoses: Diagnosis[] = [
-  { id: "dx1", userCode: "I10", name: "본태성 (원발성) 고혈압", ai: true },
-  { id: "dx2", userCode: "G44.2", name: "긴장성 두통" },
-  { id: "dx3", userCode: "R51", name: "두통", ai: true },
+  { id: "dx1", userCode: "I10", name: "본태성 (원발성) 고혈압", chartDate: "25.03.18" },
+  { id: "dx2", userCode: "G44.2", name: "긴장성 두통", chartDate: "24.11.20" },
+  { id: "dx3", userCode: "R51", name: "두통", chartDate: "25.01.10" },
 ];
 
 export type Prescription = {
@@ -124,15 +170,15 @@ export type Prescription = {
   dose: string; // 용량
   perDay: string; // 일투
   days: string; // 일수
-  ai?: boolean;
+  chartDate: string; // 과거 차트 내원일 (출처)
 };
 
 export const prescriptions: Prescription[] = [
-  { id: "rx1", userCode: "AML5", name: "암로디핀베실산염 5mg 정", dose: "1정", perDay: "1회", days: "30일", ai: true },
-  { id: "rx2", userCode: "AML10", name: "암로디핀베실산염 10mg 정", dose: "1정", perDay: "1회", days: "30일", ai: true },
-  { id: "rx3", userCode: "IBU400", name: "이부프로펜 400mg 정", dose: "1정", perDay: "3회", days: "7일" },
-  { id: "rx4", userCode: "HCT25", name: "히드로클로로티아지드 25mg 정", dose: "1정", perDay: "1회", days: "30일", ai: true },
-  { id: "rx5", userCode: "RAM5", name: "라미프릴 5mg 정", dose: "1정", perDay: "1회", days: "30일" },
+  { id: "rx1", userCode: "AML5", name: "암로디핀베실산염 5mg 정", dose: "1정", perDay: "1회", days: "30일", chartDate: "25.03.18" },
+  { id: "rx2", userCode: "AML10", name: "암로디핀베실산염 10mg 정", dose: "1정", perDay: "1회", days: "30일", chartDate: "25.04.10" },
+  { id: "rx3", userCode: "IBU400", name: "이부프로펜 400mg 정", dose: "1정", perDay: "3회", days: "7일", chartDate: "24.11.20" },
+  { id: "rx4", userCode: "HCT25", name: "히드로클로로티아지드 25mg 정", dose: "1정", perDay: "1회", days: "30일", chartDate: "25.02.14" },
+  { id: "rx5", userCode: "RAM5", name: "라미프릴 5mg 정", dose: "1정", perDay: "1회", days: "30일", chartDate: "25.01.10" },
 ];
 
 export const soap = {
