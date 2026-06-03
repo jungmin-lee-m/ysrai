@@ -267,11 +267,6 @@ function MiniCalendar({
   for (let i = 0; i < firstDay; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
 
-  const nextDisabled =
-    year > today.getFullYear() ||
-    (year === today.getFullYear() && month >= today.getMonth());
-  const isFuture = (d: number) => new Date(year, month, d) > today && !sameDay(new Date(year, month, d), today);
-
   return (
     <div className="absolute left-2 right-2 top-full z-30 mt-1 rounded-[var(--radius-lg)] border border-[var(--line-default)] bg-[var(--bg-base)] p-2 shadow-xl">
       <div className="flex items-center justify-between px-1 pb-1.5">
@@ -285,14 +280,8 @@ function MiniCalendar({
           {year}.{String(month + 1).padStart(2, "0")}
         </span>
         <button
-          onClick={() => !nextDisabled && setVm(new Date(year, month + 1, 1))}
-          disabled={nextDisabled}
-          className={cn(
-            "rounded-[var(--radius-sm)] p-1",
-            nextDisabled
-              ? "cursor-not-allowed text-[var(--text-disabled)]"
-              : "text-[var(--icon-sub)] hover:bg-[var(--bg-subtle)]",
-          )}
+          onClick={() => setVm(new Date(year, month + 1, 1))}
+          className="rounded-[var(--radius-sm)] p-1 text-[var(--icon-sub)] hover:bg-[var(--bg-subtle)]"
         >
           <ChevronRight className="h-3.5 w-3.5" />
         </button>
@@ -311,19 +300,15 @@ function MiniCalendar({
               const date = new Date(year, month, d);
               const selected = sameDay(date, value);
               const isToday = sameDay(date, today);
-              const future = isFuture(d);
               return (
                 <button
                   key={i}
-                  disabled={future}
                   onClick={() => onSelect(date)}
                   className={cn(
                     "mx-auto flex h-6 w-6 items-center justify-center rounded-full text-[11px] tabular-nums transition-colors",
                     selected
                       ? "bg-[var(--bg-service)] font-semibold text-white"
-                      : future
-                        ? "cursor-not-allowed text-[var(--text-disabled)]"
-                        : "text-[var(--text-main)] hover:bg-[var(--bg-subtle)]",
+                      : "text-[var(--text-main)] hover:bg-[var(--bg-subtle)]",
                     !selected && isToday && "ring-1 ring-[var(--violet-200)]",
                   )}
                 >
@@ -376,18 +361,16 @@ export function LeftSidebar({
   const [selectedDate, setSelectedDate] = useState(TODAY);
   const [calOpen, setCalOpen] = useState(false);
   const isToday = sameDay(selectedDate, TODAY);
-  // 오늘 = 대기만 펼침 / 과거 = 완료만 펼침
+  // 오늘 = 대기 / 과거 = 완료 / 미래 = 예약 (기본 펼침)
   const [sections, setSections] = useState({ wait: true, reserve: false, done: false });
   const toggleSection = (key: "wait" | "reserve" | "done") =>
     setSections((s) => ({ ...s, [key]: !s[key] }));
   const pickDate = (d: Date) => {
     setSelectedDate(d);
     setCalOpen(false);
-    setSections(
-      sameDay(d, TODAY)
-        ? { wait: true, reserve: false, done: false }
-        : { wait: false, reserve: false, done: true },
-    );
+    if (sameDay(d, TODAY)) setSections({ wait: true, reserve: false, done: false });
+    else if (d.getTime() < TODAY.getTime()) setSections({ wait: false, reserve: false, done: true });
+    else setSections({ wait: false, reserve: true, done: false });
   };
 
   const startResize = (e: React.MouseEvent) => {

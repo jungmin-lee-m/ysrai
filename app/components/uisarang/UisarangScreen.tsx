@@ -22,6 +22,7 @@ export function UisarangScreen() {
   const [viewed, setViewed] = useState<QueuePatient | null>(null); // 보고 있는 환자
   const [recPatient, setRecPatient] = useState<QueuePatient | null>(null); // 녹음 중인 환자
   const [pickerOpen, setPickerOpen] = useState(false); // 녹음 시작 시 환자 선택 팝업
+  const [confirmCall, setConfirmCall] = useState<QueuePatient | null>(null); // 녹음 중 타 환자 호출 확인
 
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [draft, setDraft] = useState("");
@@ -42,6 +43,7 @@ export function UisarangScreen() {
     setRec("idle");
     setSecs(0);
     setPickerOpen(false);
+    setConfirmCall(null);
   };
   const toggleLinked = () => {
     setLinked((v) => !v);
@@ -64,8 +66,14 @@ export function UisarangScreen() {
     setPickerOpen(false);
   };
 
-  // 호출하기 = 해당 환자로 바로 녹음
-  const callPatient = (p: QueuePatient) => startRecording(p);
+  // 호출하기 = 해당 환자로 녹음. 다른 환자 녹음 중이면 확인 안내 후 전환
+  const callPatient = (p: QueuePatient) => {
+    if (rec === "recording" && recPatient?.chartNo !== p.chartNo) {
+      setConfirmCall(p);
+    } else {
+      startRecording(p);
+    }
+  };
 
   // 녹음 시작 요청: 대기 환자 있으면 선택 팝업, 없으면 환자 미지정으로 시작
   const requestStart = () => {
@@ -253,6 +261,50 @@ export function UisarangScreen() {
               >
                 <UserRound className="h-4 w-4" />
                 환자 미지정으로 시작
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 녹음 중 타 환자 호출 확인 */}
+      {confirmCall && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4"
+          onClick={() => setConfirmCall(null)}
+        >
+          <div
+            className="w-[min(360px,100%)] overflow-hidden rounded-[var(--radius-xl)] border border-[var(--line-default)] bg-[var(--bg-base)] shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-5 pt-5">
+              <div className="text-[15px] font-semibold text-[var(--text-main)]">
+                진료 녹음 전환
+              </div>
+              <p className="mt-2 text-[13px] leading-relaxed text-[var(--text-sub)]">
+                <b className="font-semibold text-[var(--text-main)]">
+                  {recPatient?.name ?? "환자 미지정"}
+                </b>{" "}
+                진료 녹음을 중단하고{" "}
+                <b className="font-semibold text-[var(--text-main)]">{confirmCall.name}</b> 환자
+                진료 녹음을 시작하시겠습니까?
+              </p>
+            </div>
+            <div className="flex justify-end gap-2 px-5 pb-4 pt-4">
+              <button
+                onClick={() => setConfirmCall(null)}
+                className="rounded-[var(--radius-md)] px-3 py-2 text-[13px] font-medium text-[var(--text-sub)] hover:bg-[var(--bg-subtle)]"
+              >
+                취소
+              </button>
+              <button
+                onClick={() => {
+                  startRecording(confirmCall);
+                  setConfirmCall(null);
+                }}
+                className="rounded-[var(--radius-md)] bg-[var(--bg-service)] px-3 py-2 text-[13px] font-medium text-white hover:opacity-90"
+              >
+                중단하고 시작
               </button>
             </div>
           </div>
